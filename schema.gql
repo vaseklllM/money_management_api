@@ -1,0 +1,187 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type AuthUserModel {
+  id: ID!
+  email: String!
+  token: String!
+  nickname: String!
+}
+
+type UserModel {
+  id: ID!
+  email: String!
+  nickname: String!
+  registrationDate: DateTime!
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type CurrencyHistoryModel {
+  id: ID!
+  date: DateTime!
+  price: Float!
+}
+
+type CurrencyModel {
+  id: ID!
+  ISOCode: Int!
+  code: String!
+  symbol: String!
+  historyCourseInUAH: [CurrencyHistoryModel!]!
+}
+
+type BankCardModel {
+  id: ID!
+  iban: String!
+  cardNumber: String
+  balance: Float!
+  currency: CurrencyModel!
+}
+
+type BankCardHistoryModel {
+  id: ID!
+  cards: [BankCardModel!]!
+  date: DateTime!
+}
+
+type BankUserModel {
+  firstName: String!
+  lastName: String!
+}
+
+type BankModel {
+  token: ID!
+  user: BankUserModel!
+  historyCards: [BankCardHistoryModel!]!
+}
+
+type BankCardsModel {
+  monobank: BankModel
+}
+
+type CurrencyAccountHistoryModel {
+  id: ID!
+  title: String!
+  date: DateTime!
+  value: Float!
+  currencyAccountValue: Float!
+}
+
+type Pagination {
+  page: Int!
+  amountOfElements: Int!
+  amountOfElementsByPage: Int!
+  numberOfPages: Int!
+}
+
+type CurrencyAccountModel {
+  id: ID!
+  currency: CurrencyModel!
+  name: String!
+  value: Float!
+  history: [CurrencyAccountHistoryModel!]!
+  historyPagination: Pagination!
+}
+
+type SettingsSideMenuModel {
+  open: Boolean!
+}
+
+type SettingsModel {
+  id: ID!
+  sideMenu: SettingsSideMenuModel!
+}
+
+type Query {
+  user: UserModel!
+  bankcards: BankCardsModel!
+  currencies(numberOfHistoryItems: Int): [CurrencyModel!]!
+  currencyAccount(numberOfHistoryItems: Int, historyPage: Int, currencyAccountId: ID!): CurrencyAccountModel!
+  currencyAccounts(numberOfHistoryItems: Int, historyPage: Int): [CurrencyAccountModel!]!
+  settings: SettingsModel!
+}
+
+type Mutation {
+  signIn(signIn: SignInInput!): AuthUserModel!
+  signUp(signUp: SignUpInput!): AuthUserModel!
+  addMonobank(addMonobank: ChangeBankInputDto!): BankCardsModel!
+  deleteBankCards(deleteBankCards: DeleteBankCardInput!): BankCardsModel!
+  createCurrencyAccount(createCurrencyAccount: CreateCurrencyAccountInput!): CurrencyAccountModel!
+  updateCurrencyAccount(updateCurrencyAccount: UpdateCurrencyAccountInput!): CurrencyAccountModel!
+  deleteCurrencyAccount(deleteCurrencyAccount: DeleteCurrencyAccountInput!): [CurrencyAccountModel!]!
+  addTransactionCurrencyAccount(addTransactionCurrencyAccount: AddTransactionCurrencyAccountInput!): CurrencyAccountModel!
+  deleteTransactionCurrencyAccount(deleteTransactionCurrencyAccount: DeleteTransactionCurrencyAccountInput!): CurrencyAccountModel!
+  updateSettings(updateSettings: UpdateSettingsInput!): SettingsModel!
+}
+
+input SignInInput {
+  email: String!
+  password: String!
+}
+
+input SignUpInput {
+  email: String!
+  nickname: String!
+  password: String!
+}
+
+input ChangeBankInputDto {
+  token: String!
+  userFirstName: String!
+  userLastName: String!
+  cards: [BankCardInput!]!
+}
+
+input BankCardInput {
+  iban: String!
+  balance: Float!
+  cardNumber: String
+  currencyCode: String!
+}
+
+input DeleteBankCardInput {
+  keys: [String!]!
+}
+
+input CreateCurrencyAccountInput {
+  currencyId: ID!
+  value: Float!
+  name: String!
+}
+
+input UpdateCurrencyAccountInput {
+  id: ID!
+  name: String!
+  currencyId: ID!
+}
+
+input DeleteCurrencyAccountInput {
+  id: ID!
+}
+
+input AddTransactionCurrencyAccountInput {
+  currencyAccountId: ID!
+  value: Float!
+  title: String!
+  numberOfHistoryItems: Int
+  historyPage: Int
+}
+
+input DeleteTransactionCurrencyAccountInput {
+  currencyAccountHistoryId: ID!
+  numberOfHistoryItems: Int
+  historyPage: Int
+}
+
+input UpdateSettingsInput {
+  sideMenu: UpdateSettingsSideMenuInput
+}
+
+input UpdateSettingsSideMenuInput {
+  open: Boolean
+}
