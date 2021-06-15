@@ -26,11 +26,6 @@ export class CurrencyAccount {
     required: true,
   })
   historyId: mongoose.Types.ObjectId[];
-
-  // @Prop({
-  //   type:[{quantity:{type:Number}, product:{type:Schema.Types.ObjectId}}]
-  // })
-  // products: { quantity: number; product: Product }[];
 }
 
 export const CurrencyAccountSchema =
