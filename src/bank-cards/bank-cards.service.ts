@@ -22,8 +22,8 @@ import fetch from 'node-fetch';
 import { CurrencyModel } from 'src/currency/models/currency.model';
 import { CurrencyHistoryModel } from 'src/currency/models/currency-history.model';
 
-const dataUpdateTimeHours = 0.01;
-// const dataUpdateTimeHours = 6;
+// const dataUpdateTimeHours = 0.01;
+const dataUpdateTimeHours = 6;
 
 interface IMonobankServerData {
   clientId: string;
