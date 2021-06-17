@@ -22,7 +22,25 @@ import fetch from 'node-fetch';
 import { CurrencyModel } from 'src/currency/models/currency.model';
 import { CurrencyHistoryModel } from 'src/currency/models/currency-history.model';
 
-const dataUpdateTimeHours = 6;
+const dataUpdateTimeHours = 0.01;
+// const dataUpdateTimeHours = 6;
+
+interface IMonobankServerData {
+  clientId: string;
+  name: string;
+  webHookUrl: string;
+  permissions: string;
+  accounts: {
+    id: string;
+    currencyCode: number;
+    cashbackType: string;
+    balance: number;
+    creditLimit: number;
+    type: string;
+    iban: string;
+    maskedPan: string[];
+  }[];
+}
 
 @Injectable()
 export class BankCardsService {
@@ -34,14 +52,48 @@ export class BankCardsService {
     @InjectModel(Currency.name) private currencyModel: Model<CurrencyDocument>,
   ) {}
 
-  /** Оновлення історії карти монобанку */
-  private async updateMonobankHistory(userId: string) {
-    interface IMonobank {
-      token: string;
-    }
+  private async changeIsValidToken(
+    bank: keyof BankCardsModel = 'monobank',
+    userId: string,
+    value: boolean,
+  ) {
+    const isValid = (
+      await this.userModel.aggregate([
+        {
+          $match: { _id: mongo.ObjectId(userId) },
+        },
+        {
+          $project: {
+            _id: 0,
+            isValid: '$bankCards.monobank.isValidToken',
+          },
+        },
+      ])
+    )[0].isValid;
 
+    if (isValid === value) return undefined;
+
+    const userUpdate = await this.userModel.updateOne(
+      {
+        _id: mongo.ObjectId(userId),
+      },
+      {
+        [`bankCards.${bank}.isValidToken`]: value,
+      },
+    );
+
+    if (!userUpdate.ok) {
+      throw new Error(
+        `Помилка при спробі змінити: bankCards.${bank}.isValidToken на значення: ${value}`,
+      );
+    }
+  }
+
+  async getNewMonobankCardsHistory(
+    userId: string,
+  ): Promise<IMonobankServerData> {
     const token = (
-      await this.userModel.aggregate<IMonobank>([
+      await this.userModel.aggregate<{ token: string }>([
         {
           $match: { _id: mongo.ObjectId(userId) },
         },
@@ -54,42 +106,32 @@ export class BankCardsService {
       ])
     )[0].token;
 
-    interface IMonobankServerData {
-      clientId: string;
-      name: string;
-      webHookUrl: string;
-      permissions: string;
-      accounts: {
-        id: string;
-        currencyCode: number;
-        cashbackType: string;
-        balance: number;
-        creditLimit: number;
-        type: string;
-        iban: string;
-        maskedPan: string[];
-      }[];
+    const res = await fetch('https://api.monobank.ua/personal/client-info', {
+      method: 'GET',
+      headers: {
+        'X-Token': token,
+      },
+    });
+
+    if (!res.ok) {
+      // throw new Error('Помилка при оновленні даних карти монобанку');
+      await this.changeIsValidToken('monobank', userId, false);
+      return null;
     }
 
-    async function getNewCards(): Promise<IMonobankServerData> {
-      const res = await fetch('https://api.monobank.ua/personal/client-info', {
-        method: 'GET',
-        headers: {
-          'X-Token': token,
-        },
-      });
+    await this.changeIsValidToken('monobank', userId, true);
 
-      if (!res.ok) {
-        throw new Error('Помилка при оновленні даних карти монобанку');
-      }
+    const dataText = await res.text();
+    const data = JSON.parse(dataText);
 
-      const dataText = await res.text();
-      const data = JSON.parse(dataText);
+    return data;
+  }
 
-      return data;
-    }
+  /** Оновлення історії карти монобанку */
+  private async updateMonobankHistory(userId: string) {
+    const data = await this.getNewMonobankCardsHistory(userId);
 
-    const data = await getNewCards();
+    if (!data) return undefined;
 
     const currencies = await this.currencyModel.find();
 
@@ -370,6 +412,7 @@ export class BankCardsService {
               firstName: user.bankCards.monobank.user.firstName,
               lastName: user.bankCards.monobank.user.lastName,
             },
+            isValidToken: user.bankCards.monobank.isValidToken,
           }
         : null,
       // monobank: this.convertUserBankData('monobank', user, currencies),
@@ -471,6 +514,7 @@ export class BankCardsService {
           lastName: input.userLastName,
         },
         historyCards: [historyItem],
+        isValidToken: true,
       },
     });
 

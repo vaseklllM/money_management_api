@@ -15,6 +15,9 @@ export default class BankModel {
   @Field(() => ID)
   token: string;
 
+  @Field(() => Boolean)
+  isValidToken: boolean;
+
   @Field(() => BankUserModel)
   user: BankUserModel;
 

@@ -16,6 +16,9 @@ export class Bank {
   @Prop()
   token: string;
 
+  @Prop()
+  isValidToken: boolean;
+
   @Prop({ type: BankCardUser })
   user: BankCardUser;
 
