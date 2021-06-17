@@ -12,7 +12,7 @@ import {
 import { CurrencyArgs } from './dto/args/currency.args';
 import { mongo } from 'src/utils';
 
-const dataUpdateTimeHours = 3;
+const dataUpdateTimeHours = 24;
 
 const defaultData = [
   {
