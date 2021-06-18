@@ -14,6 +14,7 @@ const environment = process.env.NODE_ENV || 'development';
   imports: [
     GraphQLModule.forRoot({
       autoSchemaFile: true,
+      // context: ({ req, res }) => ({ req, res }),
       // installSubscriptionHandlers: true,
     }),
     ConfigModule.forRoot({

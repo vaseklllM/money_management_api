@@ -1,5 +1,5 @@
 import { UseGuards } from '@nestjs/common';
-import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { GqlAuthGuard } from 'src/auth/jwt-auth.guard';
 import TokenUserModel from 'src/auth/models/token-user.model';
 import { CurrentUser } from 'src/utils';
@@ -30,9 +30,11 @@ export class CurrencyAccountsResolver {
   @Query(() => [CurrencyAccountModel], { name: 'currencyAccounts' })
   @UseGuards(GqlAuthGuard)
   currencyAccounts(
+    @Context() context,
     @Args() args: CurrencyAccountsArgs,
     @CurrentUser() tokenUser: TokenUserModel,
   ): Promise<CurrencyAccountModel[]> {
+    // console.log(context.res.cookies);
     return this.service.currencyAccounts(tokenUser, args);
   }
 
