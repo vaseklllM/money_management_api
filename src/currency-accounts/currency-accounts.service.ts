@@ -158,7 +158,9 @@ export class CurrencyAccountsService {
     history: CurrencyAccountHistoryModel[];
     pagination: Pagination;
   }> {
-    const { historyPage = 1, numberOfHistoryItems = 10 } = args;
+    const { historyPage = 1 } = args;
+
+    const numberOfHistoryItems = args.numberOfHistoryItems || 10;
 
     interface ITestData {
       elements: {
