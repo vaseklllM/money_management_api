@@ -1,7 +1,10 @@
-import { ArgsType, Field, Int } from '@nestjs/graphql';
+import { ArgsType, Field, ID, Int } from '@nestjs/graphql';
 
 @ArgsType()
 export class CurrencyArgs {
+  @Field(() => ID)
+  id: string;
+
   @Field(() => Int, { nullable: true })
-  numberOfHistoryItems?: number;
+  numberOfHistoryItems?: number = 1;
 }

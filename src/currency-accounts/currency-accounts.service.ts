@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import TokenUserModel from 'src/auth/models/token-user.model';
@@ -22,12 +22,7 @@ import { CurrencyAccountHistoryModel } from 'src/currency-accounts-history/model
 import { Pagination } from 'src/modes/app.modes';
 import { CurrencyAccountArgs } from './dto/args/currency-account.args';
 import { DeleteTransactionCurrencyAccountInput } from './dto/inputs/delete-transaction-currency-account.input';
-import { CurrencyModel } from 'src/currency/models/currency.model';
-import {
-  Currency,
-  CurrencyDocument,
-} from 'src/currency/schemas/currency.schema';
-import { CurrencyHistoryModel } from 'src/currency/models/currency-history.model';
+import { CurrencyService } from 'src/currency/currency.service';
 
 @Injectable()
 export class CurrencyAccountsService {
@@ -37,7 +32,8 @@ export class CurrencyAccountsService {
     @InjectModel(CurrencyAccountHistory.name)
     private currencyAccountHistoryModel: Model<CurrencyAccountHistoryDocument>,
     @InjectModel(User.name) private userModel: Model<UserDocument>,
-    @InjectModel(Currency.name) private currencyModel: Model<CurrencyDocument>,
+    @Inject(forwardRef(() => CurrencyService))
+    private readonly currencyService: CurrencyService,
   ) {}
 
   /** оновлення значень currencyAccountValue елементів які йдуть після елемента historyId  */
@@ -232,49 +228,6 @@ export class CurrencyAccountsService {
     };
   }
 
-  private async getCurrencyById(id: string): Promise<CurrencyModel> {
-    const currency = await this.currencyModel.findById(id, {
-      _id: 1,
-      ISOCode: 1,
-      code: 1,
-      symbol: 1,
-    });
-
-    const historyCourseInUAH =
-      await this.currencyModel.aggregate<CurrencyHistoryModel>([
-        { $match: { _id: mongo.ObjectId(id) } },
-        {
-          $lookup: {
-            from: 'currencyhistories',
-            localField: 'historyCourseInUAH',
-            foreignField: '_id',
-            as: 'historyCourseInUAH',
-          },
-        },
-        {
-          $unwind: '$historyCourseInUAH',
-        },
-        { $sort: { 'historyCourseInUAH.date': -1 } },
-        { $limit: 1 },
-        {
-          $project: {
-            _id: 0,
-            id: '$historyCourseInUAH._id',
-            date: '$historyCourseInUAH.date',
-            price: '$historyCourseInUAH.price',
-          },
-        },
-      ]);
-
-    return {
-      ISOCode: currency.ISOCode,
-      code: currency.code,
-      id: currency._id,
-      symbol: currency.symbol,
-      historyCourseInUAH,
-    };
-  }
-
   /** повертає рахунок */
   private async getCurrencyAccount(
     id: string,
@@ -324,9 +277,9 @@ export class CurrencyAccountsService {
       args,
     );
 
-    const currency = await this.getCurrencyById(
-      String(currencyAccount.currencyId),
-    );
+    const currency = await this.currencyService.getCurrencyById({
+      id: String(currencyAccount.currencyId),
+    });
 
     return {
       currency,

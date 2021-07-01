@@ -9,8 +9,9 @@ import {
   CurrencyHistory,
   CurrencyHistoryDocument,
 } from './schemas/currency-history.schema';
-import { CurrencyArgs } from './dto/args/currency.args';
+import { CurrenciesArgs } from './dto/args/currencies.args';
 import { mongo } from 'src/utils';
+import { CurrencyArgs } from './dto/args/currency.args';
 
 const dataUpdateTimeHours = 24;
 
@@ -88,9 +89,9 @@ export class CurrencyService {
     if (currencies.length === 0) await this.createDefaultCurrencies();
   }
 
-  private async getCurrencyById(
+  private async getCurrencyByIdAllInfo(
     id: string,
-    args: CurrencyArgs,
+    args: CurrenciesArgs,
   ): Promise<CurrencyModel> {
     const currency = await this.currencyModel.findById(id, {
       _id: 1,
@@ -135,13 +136,18 @@ export class CurrencyService {
   }
 
   /** Повертає всі валюти */
-  private async getAllCurrencies(args: CurrencyArgs): Promise<CurrencyModel[]> {
+  private async getAllCurrenciesPrivate(
+    args: CurrenciesArgs,
+  ): Promise<CurrencyModel[]> {
     const currencyIds = await this.currencyModel.find({}, { _id: 1 });
 
     const currencies: CurrencyModel[] = [];
 
     for await (const currencyId of currencyIds) {
-      const currency = await this.getCurrencyById(String(currencyId._id), args);
+      const currency = await this.getCurrencyByIdAllInfo(
+        String(currencyId._id),
+        args,
+      );
       currencies.push(currency);
     }
 
@@ -213,12 +219,23 @@ export class CurrencyService {
     }
   }
 
-  async currencies(args: CurrencyArgs): Promise<CurrencyModel[]> {
+  async getAllCurrencies(args: CurrenciesArgs): Promise<CurrencyModel[]> {
     /** установка значень за замовчуванням */
     await this.checkIsCreateCurrencies();
     /** оновлення значень */
     await this.checkIsUpdateHistoryCourseInUAH();
 
-    return this.getAllCurrencies(args);
+    return this.getAllCurrenciesPrivate(args);
+  }
+
+  async getCurrencyById(args: CurrencyArgs): Promise<CurrencyModel> {
+    /** установка значень за замовчуванням */
+    await this.checkIsCreateCurrencies();
+    /** оновлення значень */
+    await this.checkIsUpdateHistoryCourseInUAH();
+
+    return await this.getCurrencyByIdAllInfo(args.id, {
+      numberOfHistoryItems: args.numberOfHistoryItems,
+    });
   }
 }
