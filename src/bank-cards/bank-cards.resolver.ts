@@ -30,26 +30,6 @@ export class BankCardsResolver {
     return this.backCardsService.changeMonobank(input, user);
   }
 
-  // /** оновлення приватбанка */
-  // @Mutation(() => BankCardModel)
-  // @UseGuards(GqlAuthGuard)
-  // changePrivatbank(
-  //   @Args('changePrivatbank') input: ChangeBankInputDto,
-  //   @CurrentUser() user: TokenUserModel,
-  // ): Promise<BankCardModel> {
-  //   return this.backCardsService.changePrivatbank(input, user);
-  // }
-
-  // /** оновлення ощадбанка */
-  // @Mutation(() => BankCardModel)
-  // @UseGuards(GqlAuthGuard)
-  // changeOshadbank(
-  //   @Args('changeOshadbank') input: ChangeBankInputDto,
-  //   @CurrentUser() user: TokenUserModel,
-  // ): Promise<BankCardModel> {
-  //   return this.backCardsService.changeOshadbank(input, user);
-  // }
-
   @Mutation(() => BankCardsModel)
   @UseGuards(GqlAuthGuard)
   deleteBankCards(

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import TokenUserModel from 'src/auth/models/token-user.model';
@@ -20,9 +20,8 @@ import {
 } from './schema/bank-card-history.schema';
 import fetch from 'node-fetch';
 import { CurrencyModel } from 'src/currency/models/currency.model';
-import { CurrencyHistoryModel } from 'src/currency/models/currency-history.model';
+import { CurrencyService } from 'src/currency/currency.service';
 
-// const dataUpdateTimeHours = 0.01;
 const dataUpdateTimeHours = 6;
 
 interface IMonobankServerData {
@@ -50,6 +49,8 @@ export class BankCardsService {
     @InjectModel(BankCardHistory.name)
     private bankCardHistoryModel: Model<BankCardHistoryDocument>,
     @InjectModel(Currency.name) private currencyModel: Model<CurrencyDocument>,
+    @Inject(forwardRef(() => CurrencyService))
+    private currencyService: CurrencyService,
   ) {}
 
   private async changeIsValidToken(
@@ -233,63 +234,6 @@ export class BankCardsService {
     }
   }
 
-  private async getCurrencyById(id: string): Promise<CurrencyModel> {
-    const currency = await this.currencyModel.findById(id, {
-      _id: 1,
-      ISOCode: 1,
-      code: 1,
-      symbol: 1,
-    });
-
-    const historyCourseInUAH =
-      await this.currencyModel.aggregate<CurrencyHistoryModel>([
-        { $match: { _id: mongo.ObjectId(id) } },
-        {
-          $lookup: {
-            from: 'currencyhistories',
-            localField: 'historyCourseInUAH',
-            foreignField: '_id',
-            as: 'historyCourseInUAH',
-          },
-        },
-        {
-          $unwind: '$historyCourseInUAH',
-        },
-        { $sort: { 'historyCourseInUAH.date': -1 } },
-        { $limit: 1 },
-        {
-          $project: {
-            _id: 0,
-            id: '$historyCourseInUAH._id',
-            date: '$historyCourseInUAH.date',
-            price: '$historyCourseInUAH.price',
-          },
-        },
-      ]);
-
-    return {
-      ISOCode: currency.ISOCode,
-      code: currency.code,
-      id: currency._id,
-      symbol: currency.symbol,
-      historyCourseInUAH,
-    };
-  }
-
-  /** Повертає всі валюти */
-  private async getAllCurrencies(): Promise<CurrencyModel[]> {
-    const currencyIds = await this.currencyModel.find({}, { _id: 1 });
-
-    const currencies: CurrencyModel[] = [];
-
-    for await (const currencyId of currencyIds) {
-      const currency = await this.getCurrencyById(String(currencyId._id));
-      currencies.push(currency);
-    }
-
-    return currencies;
-  }
-
   private async getHistoryCards(
     userId: string,
     bank: keyof BankCardsModel = 'monobank',
@@ -381,7 +325,8 @@ export class BankCardsService {
       },
     ]);
 
-    const currencies: CurrencyModel[] = await this.getAllCurrencies();
+    const currencies: CurrencyModel[] =
+      await this.currencyService.getAllCurrencies({ numberOfHistoryItems: 1 });
 
     return historyCards.map((historyCard) => ({
       date: historyCard.date,
@@ -401,8 +346,6 @@ export class BankCardsService {
   private async getBanks(tokenUser: TokenUserModel): Promise<BankCardsModel> {
     const user = await this.userModel.findById(tokenUser.userId);
 
-    // const monobankHistoryCards = await this.getHistoryCards();
-
     return {
       monobank: user.bankCards?.monobank
         ? {
@@ -415,9 +358,6 @@ export class BankCardsService {
             isValidToken: user.bankCards.monobank.isValidToken,
           }
         : null,
-      // monobank: this.convertUserBankData('monobank', user, currencies),
-      // oshadbank: this.convertUserBankData('oshadbank', user, currencies),
-      // privatbank: this.convertUserBankData('privatbank', user, currencies),
     };
   }
 
@@ -535,20 +475,6 @@ export class BankCardsService {
   ): Promise<BankCardsModel> {
     return this.addBank(input, user, 'monobank');
   }
-
-  // async changePrivatbank(
-  //   input: ChangeBankInputDto,
-  //   user: TokenUserModel,
-  // ): Promise<BankCardModel> {
-  //   return this.changeBank(input, user, 'privatbank');
-  // }
-
-  // async changeOshadbank(
-  //   input: ChangeBankInputDto,
-  //   user: TokenUserModel,
-  // ): Promise<BankCardModel> {
-  //   return this.changeBank(input, user, 'oshadbank');
-  // }
 
   /** Видалення банківських карт */
   async deleteBankCards(

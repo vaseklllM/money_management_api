@@ -1,6 +1,7 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { User, UserSchema } from 'src/auth/schemas/user.schema';
+import { CurrencyModule } from 'src/currency/currency.module';
 import { Currency, CurrencySchema } from 'src/currency/schemas/currency.schema';
 import { BankCardsResolver } from './bank-cards.resolver';
 import { BankCardsService } from './bank-cards.service';
@@ -19,6 +20,7 @@ import { BankCard, BankCardSchema } from './schema/bank-card.schema';
       { name: BankCardHistory.name, schema: BankCardHistorySchema },
       { name: Currency.name, schema: CurrencySchema },
     ]),
+    forwardRef(() => CurrencyModule),
   ],
 })
 export class BankCardsModule {}
