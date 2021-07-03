@@ -1,4 +1,4 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import TokenUserModel from 'src/auth/models/token-user.model';
@@ -22,7 +22,6 @@ import { CurrencyAccountHistoryModel } from 'src/currency-accounts-history/model
 import { Pagination } from 'src/modes/app.modes';
 import { CurrencyAccountArgs } from './dto/args/currency-account.args';
 import { DeleteTransactionCurrencyAccountInput } from './dto/inputs/delete-transaction-currency-account.input';
-import { CurrencyService } from 'src/currency/currency.service';
 
 @Injectable()
 export class CurrencyAccountsService {
@@ -32,8 +31,6 @@ export class CurrencyAccountsService {
     @InjectModel(CurrencyAccountHistory.name)
     private currencyAccountHistoryModel: Model<CurrencyAccountHistoryDocument>,
     @InjectModel(User.name) private userModel: Model<UserDocument>,
-    @Inject(forwardRef(() => CurrencyService))
-    private readonly currencyService: CurrencyService,
   ) {}
 
   /** оновлення значень currencyAccountValue елементів які йдуть після елемента historyId  */
@@ -237,18 +234,7 @@ export class CurrencyAccountsService {
       _id: string;
       name: string;
       value: number;
-      currencyId: number;
-      // currency: {
-      //   _id: string;
-      //   ISOCode: number;
-      //   code: string;
-      //   symbol: string;
-      // };
-      // currencyHistoryCourseInUAH: {
-      //   _id: string;
-      //   date: Date;
-      //   price: number;
-      // }[];
+      currencyId: string;
     }
 
     const currencyAccount = (
@@ -277,12 +263,14 @@ export class CurrencyAccountsService {
       args,
     );
 
-    const currency = await this.currencyService.getCurrencyById({
-      id: String(currencyAccount.currencyId),
-    });
-
     return {
-      currency,
+      currency: {
+        id: currencyAccount.currencyId,
+        ISOCode: 0,
+        code: '',
+        historyCourseInUAH: [],
+        symbol: '',
+      },
       history: currencyAccountHistory.history,
       historyPagination: currencyAccountHistory.pagination,
       id: currencyAccount._id,

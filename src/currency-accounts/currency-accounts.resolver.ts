@@ -1,7 +1,16 @@
 import { UseGuards } from '@nestjs/common';
-import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
+import {
+  Args,
+  Mutation,
+  Parent,
+  Query,
+  ResolveField,
+  Resolver,
+} from '@nestjs/graphql';
 import { GqlAuthGuard } from 'src/auth/jwt-auth.guard';
 import TokenUserModel from 'src/auth/models/token-user.model';
+import { CurrencyService } from 'src/currency/currency.service';
+import { CurrencyModel } from 'src/currency/models/currency.model';
 import { CurrentUser } from 'src/utils';
 import { CurrencyAccountsService } from './currency-accounts.service';
 import { CurrencyAccountArgs } from './dto/args/currency-account.args';
@@ -14,9 +23,12 @@ import { UpdateCurrencyAccountInput } from './dto/inputs/update-currency-account
 import { CurrencyAccountModel } from './models/currency-account.model';
 
 /** Валютні рахунки */
-@Resolver(() => [CurrencyAccountModel])
+@Resolver(() => CurrencyAccountModel)
 export class CurrencyAccountsResolver {
-  constructor(private readonly service: CurrencyAccountsService) {}
+  constructor(
+    private readonly service: CurrencyAccountsService,
+    private readonly currencyService: CurrencyService,
+  ) {}
 
   @Query(() => CurrencyAccountModel, { name: 'currencyAccount' })
   @UseGuards(GqlAuthGuard)
@@ -25,6 +37,14 @@ export class CurrencyAccountsResolver {
     @CurrentUser() tokenUser: TokenUserModel,
   ): Promise<CurrencyAccountModel> {
     return this.service.currencyAccount(tokenUser, args);
+  }
+
+  @ResolveField()
+  async currency(
+    @Parent() currencyAccount: CurrencyAccountModel,
+  ): Promise<CurrencyModel> {
+    const { id } = currencyAccount.currency;
+    return this.currencyService.getCurrencyById({ id });
   }
 
   @Query(() => [CurrencyAccountModel], { name: 'currencyAccounts' })
