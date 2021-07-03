@@ -296,10 +296,6 @@ export class CurrencyAccountsService {
       );
     }
 
-    /** ------------------------------------------------------------------ */
-    await this.updateHistoryIdItems('60b659b6152a634ddc5db240');
-    /** ------------------------------------------------------------------ */
-
     return this.getCurrencyAccount(args.currencyAccountId, args);
   }
 
