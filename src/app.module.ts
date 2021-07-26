@@ -22,8 +22,8 @@ const environment = process.env.NODE_ENV || 'development';
       isGlobal: true,
     }),
     MongooseModule.forRoot(process.env.MONGODB_WRITE_CONNECTION_STRING, {
+      useCreateIndex: true,
       useNewUrlParser: true,
-      useUnifiedTopology: true,
     }),
     AuthModule,
     BankCardsModule,
