@@ -83,8 +83,6 @@ export class BankCardsService {
       },
     );
 
-    console.log(userUpdate);
-
     if (!userUpdate) {
       throw new Error(
         `Помилка при спробі змінити: bankCards.${bank}.isValidToken на значення: ${value}`,
