@@ -510,7 +510,7 @@ export class CurrencyAccountsService {
 
     await historyItem.remove();
 
-    if (!currencyAccountRes.ok || !currencyAccountRes.nModified) {
+    if (!currencyAccountRes.acknowledged || !currencyAccountRes.acknowledged) {
       throw new Error('Помилка при видаленні');
     }
 
