@@ -1,7 +1,7 @@
 import * as mongoose from 'mongoose';
 
 const mongo = {
-  ObjectId: mongoose.Types.ObjectId,
+  ObjectId: (id) => new mongoose.Types.ObjectId(id),
 };
 
 export default mongo;

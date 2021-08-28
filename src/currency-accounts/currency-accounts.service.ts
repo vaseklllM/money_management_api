@@ -349,7 +349,7 @@ export class CurrencyAccountsService {
       },
     );
 
-    if (!user.ok) {
+    if (!user) {
       throw new Error(
         'Помилка при добавлені нового елемента в currencyAccountsId',
       );
@@ -376,7 +376,7 @@ export class CurrencyAccountsService {
       },
     );
 
-    if (!updateRes.ok) throw new Error('Помилка при збережені');
+    if (!updateRes) throw new Error('Помилка при збережені');
 
     return this.getCurrencyAccount(input.id);
   }
@@ -412,7 +412,7 @@ export class CurrencyAccountsService {
     );
 
     if (
-      !deleteFromUserRes.ok ||
+      !deleteFromUserRes ||
       !removeFromCollectionRes.ok ||
       !removeHistoryRes.ok
     ) {
