@@ -380,9 +380,7 @@ export class BankCardsService {
         $or: cardIds.map((i) => ({ _id: i })),
       });
 
-      // console.log(deleteCardsRes);
-
-      if (!deleteCardsRes.ok) {
+      if (!deleteCardsRes.acknowledged) {
         throw new Error('Помилка при видаленні');
       }
     }
@@ -391,7 +389,7 @@ export class BankCardsService {
       $or: ids.map((i) => ({ _id: i })),
     });
 
-    if (!deleteHistoriesRes.ok) {
+    if (!deleteHistoriesRes.acknowledged) {
       throw new Error('Помилка при видаленні');
     }
   }

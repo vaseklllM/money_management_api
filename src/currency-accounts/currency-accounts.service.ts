@@ -413,8 +413,9 @@ export class CurrencyAccountsService {
 
     if (
       !deleteFromUserRes ||
-      !removeFromCollectionRes.ok ||
-      !removeHistoryRes.ok
+      !removeFromCollectionRes.deletedCount ||
+      !removeHistoryRes.deletedCount ||
+      !deleteFromUserRes.acknowledged
     ) {
       throw new Error('Помилка при видаленні');
     }
@@ -450,7 +451,7 @@ export class CurrencyAccountsService {
       },
     });
 
-    if (!updateCurruncyAccount.ok) {
+    if (!updateCurruncyAccount.acknowledged) {
       throw new Error('Помилка при створенні нового елемента');
     }
 
