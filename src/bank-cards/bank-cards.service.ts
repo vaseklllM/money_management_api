@@ -376,20 +376,16 @@ export class BankCardsService {
     });
 
     if (cardIds.length !== 0) {
-      const deleteCardsRes = await this.bankCardModel.remove({
+      await this.bankCardModel.remove({
         $or: cardIds.map((i) => ({ _id: i })),
       });
-
-      if (!deleteCardsRes.acknowledged) {
-        throw new Error('Помилка при видаленні');
-      }
     }
 
     const deleteHistoriesRes = await this.bankCardHistoryModel.remove({
       $or: ids.map((i) => ({ _id: i })),
     });
 
-    if (!deleteHistoriesRes.acknowledged) {
+    if (!deleteHistoriesRes.deletedCount) {
       throw new Error('Помилка при видаленні');
     }
   }
