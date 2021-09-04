@@ -215,6 +215,8 @@ export class BankCardsService {
       ])
     )[0];
 
+    if (!lastElDate) return;
+
     if (typeof lastElDate.date === 'object') {
       const diff = new Date().getTime() - lastElDate.date.getTime();
       const hours = diff / 1000 / 60 / 60;
@@ -491,6 +493,8 @@ export class BankCardsService {
     const updateRes = await user.update({
       bankCards: newBankCards,
     });
+
+    console.log(updateRes);
 
     if (!updateRes.ok) throw new Error('Помилка при Видаленні');
 
