@@ -365,11 +365,13 @@ export class BankCardsService {
 
   /** видалення історії банківських карт */
   private async deleteBankCardsHistoryItems(ids: string[]) {
-    if (ids.length <= 0) return undefined;
+    if (ids.length <= 0) return;
 
     const cardHistories = await this.bankCardHistoryModel.find({
       $or: ids.map((i) => ({ _id: mongo.ObjectId(i) })),
     });
+
+    if (cardHistories.length <= 0) return;
 
     let cardIds = [];
 
@@ -454,7 +456,7 @@ export class BankCardsService {
       },
     });
 
-    if (!userUpdate.ok || !userUpdate.nModified) {
+    if (!userUpdate.acknowledged || !userUpdate.acknowledged) {
       throw new Error('Помилка при збереженні');
     }
 
@@ -479,13 +481,14 @@ export class BankCardsService {
   ): Promise<BankCardsModel> {
     const user = await this.userModel.findOne({ _id: tokenUser.userId });
 
-    const newBankCards = { ...user.bankCards };
+    const newBankCards: any = user.toObject().bankCards;
 
     for await (const key of input.keys) {
       if (user?.bankCards[key]) {
         await this.deleteBankCardsHistoryItems(
           user.bankCards[key].historyCards.map((i) => String(i)),
         );
+
         delete newBankCards[key];
       }
     }
@@ -494,9 +497,7 @@ export class BankCardsService {
       bankCards: newBankCards,
     });
 
-    console.log(updateRes);
-
-    if (!updateRes.ok) throw new Error('Помилка при Видаленні');
+    if (!updateRes.acknowledged) throw new Error('Помилка при Видаленні');
 
     return this.getBanks(tokenUser);
   }
