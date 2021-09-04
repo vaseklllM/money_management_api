@@ -33,17 +33,19 @@ export class SettingsService {
   ): Promise<SettingsModel> {
     const user = await this.userModel.findById(userToken.userId);
 
-    const updateStatus = await user.update({
+    const userObj = user.toObject();
+
+    const updateStatus = await user.updateOne({
       settings: {
-        ...user.settings,
+        ...userObj.settings,
         sideMenu: {
-          ...user.settings?.sideMenu,
+          ...userObj.settings?.sideMenu,
           ...input.sideMenu,
         },
       },
     });
 
-    if (!updateStatus.ok) {
+    if (!updateStatus.acknowledged) {
       throw new Error('помилка при збереженні');
     }
 
